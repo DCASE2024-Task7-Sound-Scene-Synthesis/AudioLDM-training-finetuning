@@ -52,7 +52,7 @@ If the structure is not correct or partly missing. You will see the error messag
 ## (2024) Custom Model Configuration
 Make your own config yaml file before training/finetuning. <br/>
 You can change the model structure and learning details. <br/>
-Refer to the examples for variants of [AudioLDM](https://github.com/haoheliu/AudioLDM-training-finetuning/tree/a6b15e86c3d042832dee08a94beb11819b297e39/audioldm_train/config/2023_08_23_reproduce_audioldm).
+Refer to the examples for variants of [AudioLDM](audioldm_train/config/2023_08_23_reproduce_audioldm).
 [AudioLDM1](https://github.com/haoheliu/AudioLDM/blob/6450a512e078c2c86b7aed86dadcc8964562fe59/audioldm/utils.py#L100) and [AudioLDM2](https://github.com/haoheliu/AudioLDM2/blob/26a63bc9f9a54270fa67c60473bce705da604e58/audioldm2/utils.py#L221) may also help.
 
 ## Train the AudioLDM model
@@ -114,11 +114,11 @@ python3 audioldm_train/infer.py --config_yaml audioldm_train/config/2023_08_23_r
 
 The generated audio will be named with the caption by default. If you like to specify the filename to use, please checkout the format of *tests/captionlist/inference_test_with_filename.lst*.
 
-This repo only support inference with the model you trained by yourself. If you want to use the pretrained model directly, please use these two repos: [AudioLDM](https://github.com/haoheliu/AudioLDM) and [AudioLDM2](https://github.com/haoheliu/AudioLDM2).
-
 ### (2024) using Pretrained Model
 As the provided pretrained checkpoints (audioldm-m-full, audioldm-s-full) do not include some weights (e.g. cond_stage_model, first_state_model, clap, etc.), it may cause error. <br/>
-Use <em>strict=False</em> option while executing ```load_state_dict```.
+> (from the official repo) This repo only support inference with the model you trained by yourself. If you want to use the pretrained model directly, please use these two repos: [AudioLDM](https://github.com/haoheliu/AudioLDM) and [AudioLDM2](https://github.com/haoheliu/AudioLDM2).
+
+Use <em>strict=False</em> option while executing [```load_state_dict```](audioldm_train/infer.py#L81) to make an inference with a pretrained model. Otherwise, do not change the code to prevent unexpected errors.
 ```python
 latent_diffusion.load_state_dict(checkpoint["state_dict"], strict=False)
 ```
@@ -136,7 +136,7 @@ You do not need to resample or pre-segment the audiofile. The dataloader will do
 Here we explain how to configure for your custom dataset. The explanation contains examples for Audiocaps, which is provided as default in this repo.
 
 - In the Config(yaml), change corresponding configurations. (example from audioldm_original_medium.yaml)
-(see [audioldm_train/dataset_plugin.py](todo-link) for add_ons)
+(see [audioldm_train/dataset_plugin.py](audioldm_train/dataset_plugin.py) for add_ons)
   ```yaml
   metadata_root: "./data/dataset/metadata/dataset_root.json"
 
@@ -168,7 +168,7 @@ Here we explain how to configure for your custom dataset. The explanation contai
 
   # ... other configs
   ```
-  For default(basic) config, see get_basic_config function in [AudioLDM2/audioldm2/utils.py](https://github.com/haoheliu/AudioLDM2/blob/26a63bc9f9a54270fa67c60473bce705da604e58/audioldm2/utils.py#L242).
+  For default(basic) config, see get_basic_config function in [AudioLDM2/audioldm2/utils.py](https://github.com/haoheliu/AudioLDM2/blob/26a63bc9f9a54270fa67c60473bce705da604e58/audioldm2/utils.py#L221).
 
 - Example directory branch
 After downloading the Audiocaps dataset to data/dataset, you will have the following folder structure. The explanation is written based on this structure.
@@ -234,7 +234,7 @@ After downloading the Audiocaps dataset to data/dataset, you will have the follo
   ```
 
 - Preprocess is done according to the preprocessing configurations. 
-For example, the Dataset object reads the waveform with a random start if audio is longer than predefined duration. (Refer to the \__get_item\__ method in AudioDataset class in this dataset.py(todo-link))
+For example, the Dataset object reads the waveform with a random start if audio is longer than predefined duration. (Refer to the \__get_item\__ method in AudioDataset class in this [dataset.py](audioldm_train/utilities/data/dataset.py#L81))
 
 # Cite this work
 If you found this tool useful, please consider citing
