@@ -16,7 +16,7 @@ We sincerely thank to the authors for sharing the official code and facilitating
   * [Train the AudioLDM model](#train-the-audioldm-model)
   * [Finetuning of the pretrained model](#finetuning-of-the-pretrained-model)
   * [Evaluate the model output](#evaluate-the-model-output)
-  * [Inference with the pretrained model](#inference-with-the-pretrained-model)
+  * [Inference with the trained model](#inference-with-the-trained-model)
     * [(2024) using Pretrained Model](#2024-using-pretrained-model)
   * [Train the model using your own dataset](#train-the-model-using-your-own-dataset)
     * [(2024) Custom Dataset](#2024-custom-dataset)
@@ -98,7 +98,7 @@ python3 audioldm_train/eval.py --log_path <path-to-the-experiment-folder>
 ```
 The evaluation result will be saved in a json file at the same level of the audio folder.
 
-## Inference with the pretrained model
+## Inference with the trained model
 Use the following syntax:
 
 ```shell
@@ -121,6 +121,11 @@ As the provided pretrained checkpoints (audioldm-m-full, audioldm-s-full) do not
 Use <em>strict=False</em> option while executing [```load_state_dict```](audioldm_train/infer.py#L81) to make an inference with a pretrained model. Otherwise, do not change the code to prevent unexpected errors.
 ```python
 latent_diffusion.load_state_dict(checkpoint["state_dict"], strict=False)
+```
+
+After then, also specify the checkpoint path with config yaml and list for inference. Make sure you downloaded one of the pretrained checkpoints mentioned in Section [Finetuning of the pretrained model](#finetuning-of-the-pretrained-model). For instance,
+```shell
+python3 audioldm_train/infer.py --config_yaml audioldm_train/config/2023_08_23_reproduce_audioldm/audioldm_original_medium.yaml --list_inference tests/captionlist/inference_test.lst --reload_from_ckpt data/checkpoints/audioldm-m-full.ckpt
 ```
 
 ## Train the model using your own dataset
