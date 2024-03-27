@@ -2,14 +2,25 @@
 
 # 🔊 AudioLDM training, finetuning, inference and evaluation
 
+# DCASE 2024 Challenge Task7 Sound Scene Synthesis
+We added some extra descriptions upon the official AudioLDM repository. <br/>
+There is no modification in the code. <br/>
+You can search for "2024" to see the added sections in README. <br/>
+Please also refer to the code in our baseline ipynb in Google Colab for submission. <br/>
+For other inquiries, please contact the author of the code and paper (AudioLDM). <br/>
+We sincerely thank to the authors for sharing the official code and facilitating the advancement of academia. <br/>
+
 - [Prepare Python running environment](#prepare-python-running-environment)
   * [Download checkpoints and dataset](#download-checkpoints-and-dataset)
 - [Play around with the code](#play-around-with-the-code)
+  * [(2024) Custom Model Configuration](#2024-custom-model-configuration)
   * [Train the AudioLDM model](#train-the-audioldm-model)
   * [Finetuning of the pretrained model](#finetuning-of-the-pretrained-model)
   * [Evaluate the model output](#evaluate-the-model-output)
-  * [Inference with the pretrained model](#inference-with-the-pretrained-model)
+  * [Inference with the trained model](#inference-with-the-trained-model)
+    * [(2024) using Pretrained Model](#2024-using-pretrained-model)
   * [Train the model using your own dataset](#train-the-model-using-your-own-dataset)
+    * [(2024) Custom Dataset](#2024-custom-dataset)
 - [Cite this work](#cite-this-work)
 
 # Prepare Python running environment
@@ -38,6 +49,12 @@ python3 tests/validate_dataset_checkpoint.py
 If the structure is not correct or partly missing. You will see the error message.
 
 # Play around with the code
+
+## (2024) Custom Model Configuration
+Make your own config yaml file before training/finetuning. <br/>
+You can change the model structure and learning details. <br/>
+Refer to the examples for variants of [AudioLDM](audioldm_train/config/2023_08_23_reproduce_audioldm).
+[AudioLDM1](https://github.com/haoheliu/AudioLDM/blob/6450a512e078c2c86b7aed86dadcc8964562fe59/audioldm/utils.py#L100) and [AudioLDM2](https://github.com/haoheliu/AudioLDM2/blob/26a63bc9f9a54270fa67c60473bce705da604e58/audioldm2/utils.py#L221) may also help.
 
 ## Train the AudioLDM model
 ```python
@@ -82,7 +99,7 @@ python3 audioldm_train/eval.py --log_path <path-to-the-experiment-folder>
 ```
 The evaluation result will be saved in a json file at the same level of the audio folder.
 
-## Inference with the pretrained model
+## Inference with the trained model
 Use the following syntax:
 
 ```shell
@@ -98,7 +115,19 @@ python3 audioldm_train/infer.py --config_yaml audioldm_train/config/2023_08_23_r
 
 The generated audio will be named with the caption by default. If you like to specify the filename to use, please checkout the format of *tests/captionlist/inference_test_with_filename.lst*.
 
-This repo only support inference with the model you trained by yourself. If you want to use the pretrained model directly, please use these two repos: [AudioLDM](https://github.com/haoheliu/AudioLDM) and [AudioLDM2](https://github.com/haoheliu/AudioLDM2).
+### (2024) using Pretrained Model
+As the provided pretrained checkpoints (audioldm-m-full, audioldm-s-full) do not include some weights (e.g. cond_stage_model, first_state_model, clap, etc.), it may cause error. <br/>
+> (from the official repo) This repo only support inference with the model you trained by yourself. If you want to use the pretrained model directly, please use these two repos: [AudioLDM](https://github.com/haoheliu/AudioLDM) and [AudioLDM2](https://github.com/haoheliu/AudioLDM2).
+
+Use <em>strict=False</em> option while executing [```load_state_dict```](audioldm_train/infer.py#L81) to make an inference with a pretrained model. Otherwise, do not change the code to prevent unexpected errors.
+```python
+latent_diffusion.load_state_dict(checkpoint["state_dict"], strict=False)
+```
+
+After then, also specify the checkpoint path with config yaml and list for inference. Make sure you downloaded one of the pretrained checkpoints mentioned in Section [Finetuning of the pretrained model](#finetuning-of-the-pretrained-model). For instance,
+```shell
+python3 audioldm_train/infer.py --config_yaml audioldm_train/config/2023_08_23_reproduce_audioldm/audioldm_original_medium.yaml --list_inference tests/captionlist/inference_test.lst --reload_from_ckpt data/checkpoints/audioldm-m-full.ckpt
+```
 
 ## Train the model using your own dataset
 Super easy, simply follow these steps:
@@ -108,6 +137,110 @@ Super easy, simply follow these steps:
 3. Use your dataset in the YAML file.
 
 You do not need to resample or pre-segment the audiofile. The dataloader will do most of the jobs.
+
+### (2024) Custom Dataset
+Here we explain how to configure for your custom dataset. The explanation contains examples for Audiocaps, which is provided as default in this repo.
+
+- In the Config(yaml), change corresponding configurations. (example from audioldm_original_medium.yaml)
+(see [audioldm_train/dataset_plugin.py](audioldm_train/dataset_plugin.py) for add_ons)
+  ```yaml
+  metadata_root: "./data/dataset/metadata/dataset_root.json"
+
+  data: # data split and corresponding dataset names. should be mentioned as key in metadata_root json.
+    train: ["audiocaps"] # either string of name or list of names
+    val: "audiocaps"
+    test: "audiocaps"
+    class_label_indices: "audioset_eval_subset"
+    dataloader_add_ons: [] # can attach add_ons for preprocessing while data loading
+
+  variables:
+    sampling_rate: &sampling_rate 16000 
+    mel_bins: &mel_bins 64
+    # ... other variables
+
+  preprocessing:
+    audio: # config for audio waveform
+      sampling_rate: *sampling_rate
+      max_wav_value: 32768.0
+      duration: 10.24
+    stft: # config for Short Time Fourier Transform
+      filter_length: 1024
+      hop_length: 160
+      win_length: 1024
+    mel: # config for mel spectrogram
+      n_mel_channels: *mel_bins
+      mel_fmin: 0
+      mel_fmax: 8000 
+
+  # ... other configs
+  ```
+  For default(basic) config, see get_basic_config function in [AudioLDM2/audioldm2/utils.py](https://github.com/haoheliu/AudioLDM2/blob/26a63bc9f9a54270fa67c60473bce705da604e58/audioldm2/utils.py#L221).
+
+- Example directory branch
+After downloading the Audiocaps dataset to data/dataset, you will have the following folder structure. The explanation is written based on this structure.
+  ```bash
+  .
+  └── data/
+      └── dataset/
+          ├── audioset/ # dir for audio files
+          │   └── ... 
+          └── metadata # dir for metadata
+              ├── audiocaps # dataset name
+              │   ├── datafiles/
+              │   │   ├── audiocaps_train_label.json
+              │   │   └── ...
+              │   ├── testset_subset/
+              │   │   ├── audiocaps_test_nonrepeat_subset_0.json
+              │   │   └── ...
+              │   └── class_labels_indices.csv
+              └── dataset_root.json
+  ```
+
+- Create a json for config\["metadata_root"\] (e.g. dataset_root.json)
+  ```
+  {
+      "audiocaps": "./data/dataset/audioset", # directory to data files
+      "comments":{
+      },
+
+      "metadata":{ # path to metadata for each data split
+          "path": {
+              "audiocaps":{
+                  "train": "./data/dataset/metadata/audiocaps/datafiles/audiocaps_train_label.json", 
+                  "test": "./data/dataset/metadata/audiocaps/testset_subset/audiocaps_test_nonrepeat_subset_0.json",
+                  "val": "./data/dataset/metadata/audiocaps/testset_subset/audiocaps_test_nonrepeat_subset_0.json",
+                  "class_label_indices": "./data/dataset/metadata/audiocaps/class_labels_indices.csv"
+              }
+          }
+      }
+  }
+  ```
+
+- Create a json for metadata of each datasplit mentioned above (e.g. audiocaps_train_label.json)
+  ```
+  {
+  "data": [
+    {
+    "wav": "zip_audios/unbalanced_train_segments/unbalanced_train_segments_part36/Yr1nicOVtvkQ.wav", # path to audio (wav)
+    "seg_label": "/mnt/fast/nobackup/scratch4weeks/hl01486/datasets/audiocaps_segment_labels/averaged/Yr1nicOVtvkQ.npy", # path to segment label (seems deprecated. not necessary)
+    "labels": "/m/02jz0l,/m/09x0r", # label mID
+    "caption": "A woman talks nearby as water pours" # caption
+    },
+    ...
+  ]
+  }
+  ```
+
+- Create a csv for mapping between class index, mid (Machine IDentifier), and name (e.g. class_labels_indices.csv)
+  ```csv
+  index,mid,display_name
+  0,/m/09x0r,"Speech"
+  1,/m/05zppz,"Male speech, man speaking"
+  ...
+  ```
+
+- Preprocess is done according to the preprocessing configurations. 
+For example, the Dataset object reads the waveform with a random start if audio is longer than predefined duration. (Refer to the \__get_item\__ method in AudioDataset class in this [dataset.py](audioldm_train/utilities/data/dataset.py#L81))
 
 # Cite this work
 If you found this tool useful, please consider citing
