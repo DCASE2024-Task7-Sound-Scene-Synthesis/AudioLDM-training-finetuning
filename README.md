@@ -2,10 +2,11 @@
 
 # 🔊 AudioLDM training, finetuning, inference and evaluation
 
-# 2024
+# DCASE 2024 Challenge Task7 Sound Scene Synthesis
 We added some extra descriptions upon the official AudioLDM repository. <br/>
 There is no modification in the code. <br/>
 You can search for "2024" to see the added sections in README. <br/>
+Please also refer to the code in our baseline ipynb in Google Colab for submission. <br/>
 For other inquiries, please contact the author of the code and paper (AudioLDM). <br/>
 We sincerely thank to the authors for sharing the official code and facilitating the advancement of academia. <br/>
 
